@@ -1,0 +1,243 @@
+---
+title: "Projet Séries Temporelles"
+author: "James Kelson LOUIS"
+date: "4/13/2020"
+output:
+  html_document: default
+  pdf_document: default
+subtitle: UNIVERSITÉ DE PARIS / MASTER 1 INGÉNIERIE MATHÉMATIQUE ET BIOSTATISTIQUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+setwd("C:/Users/james/Desktop/Projet")
+serie_24 <-read_excel("serie_24.xls")
+```
+
+```{r}
+(serie_24 <- ts(serie_24,frequency = 12,start=c(1990,1)))
+```
+```{r}
+start(serie_24)
+end(serie_24)
+```
+
+```{r}
+length(serie_24)
+```
+
+
+
+```{r}
+tail(serie_24,5)
+which(serie_24==tail(serie_24,5)[1])
+```
+
+```{r}
+op <- par(mfrow=c(1,2))
+hist(serie_24, main="Histogramme de la série")
+qqnorm(serie_24)
+qqline(serie_24, col='red')
+par(op)
+```
+```{r}
+boxplot(serie_24, horizontal=T)
+```
+
+```{r}
+dec <- decompose(serie_24)
+par(mfrow=c(3,1))
+plot(dec$random,type="l",main="Random",col="#8258FA");plot(dec$seasonal,type="l",main="Saisonalite",col="red");plot(dec$trend,type="l",main="tendance",col="#bd2ec6")
+```
+
+
+
+```{r}
+acf(dec$random, na.action = na.pass)
+pacf(dec$random, na.action = na.pass)
+```
+## Application de la moyenne mobile.
+## Première élimination de la tendance.
+```{r}
+n <- length(serie_24)
+p=12
+m=p/2
+X_star=rep(NA, n)
+for (i in (m+1):(n-m)) {
+X_star[i] <- 1/12*(1/2*serie_24[i-m]+
+sum(serie_24[(i-m+1):(i+m-1)])+1/2*serie_24[i+m])
+}
+X_star <- ts(X_star,start=c(1990,1),frequency = 12)
+```
+# Première série sans tendance.
+```{r}
+X_moinsX_star <-serie_24-X_star
+```
+## Premier Calcul de saisonnalité.
+```{r}
+X_moinsX_star<- c(X_moinsX_star,rep(0,11))
+mat <- matrix(X_moinsX_star,ncol =p, byrow = T)
+moy_col <- apply(mat, 2, mean,na.rm=T)
+```
+## Estimation
+```{r}
+s_chapo <- numeric(12)
+for (i in 1:12) {
+s_chapo[i] <- moy_col[i]-mean(moy_col)
+}
+B <- rep(s_chapo,18)
+# On supprime les elements pour avoir 205 valeurs
+C <- B[1:(length(B)-11)]
+ts_s_chapo<- ts(C, start=c(1990,1),frequency = 12)
+```
+# Première série désaisonnalisée
+```{r}
+Xcvs<- serie_24-ts_s_chapo
+plot(Xcvs,type="l",col="#FF7F50",main="1ère série désaisonalisée")
+```
+# Deuxième calcul d’élimination de tendance.
+```{r}
+X_star2=rep(NA, n)
+for (i in (m+1):(n-m)) {
+X_star2[i] <- 1/12*(1/2*Xcvs[i-m]+sum(Xcvs[(i-m+1):(i+m-1)])+1/2*Xcvs[i+m])
+}
+X_star2 <- ts(X_star2,start = c(1990,1),frequency = 12)
+```
+
+# Deuxième série sans tendance
+```{r}
+X_moinsX_star2 <- serie_24-X_star2
+par(mfrow=c(2,2))
+plot(X_moinsX_star2,type="l",main="Deuxième série sans tendance",col="#7ac62e")
+plot(X_moinsX_star,type="l",main="Deuxième série sans tendance",col="#7ac62e")
+```
+# Deuxième calcul de saisonnalité.
+```{r}
+X_moinsX_star3 <- c(X_moinsX_star2,rep(0,11))
+mat2 <- matrix(X_moinsX_star3,ncol =p, byrow = T)
+moy_col2 <- apply(mat2, 2, mean,na.rm=T)
+moy_col2
+```
+# Estimation de la saisonnalité.
+```{r}
+s_chapo2 <- numeric(12)
+for (i in 1:12) {
+s_chapo2[i] <- moy_col2[i]-1/12*sum(moy_col2)
+}
+D <- rep(s_chapo2,18)
+E <- D[1:(length(B)-11)]
+ts_s_chapo2<- ts(E, start=c(1990,1),frequency = 12)
+```
+#### Résidus
+```{r}
+res=serie_24-X_star2-ts_s_chapo2
+```
+#### Comparaison de l'acf et de la pacf avec decompose.
+```{r}
+par(mfrow=c(2,2))
+acf(res,na.action = na.pass)
+acf(dec$random, na.action = na.pass)
+pacf(res,na.action = na.pass, main="manuelle")
+pacf(dec$random, na.action = na.pass, main="decompose")
+```
+## A priori on a pas de modele pur AR et MA simple à proposer, principe de parcimonie.
+```{r}
+length(res)
+sum(is.na(res))
+```
+#### On supprime les valeurs manquantes.
+```{r}
+#res1 <- na.omit(res)
+res1 <- window(res, start=c(1990,7),end=c(2006,7))
+length(res1)
+```
+
+```{r}
+start(res1)
+end(res1)
+```
+#### On découpe la série, et on garde de cote les cinqs dernières valeurs pour le calcul de l'erreur et faire les prédictions.
+```{r}
+new_serie=window(res1, start=c(1990,7),end=c(2006,2),frequency=12)
+length(new_serie)
+```
+
+```{r}
+ts.plot(new_serie,col="red")
+```
+#### Proposition de modèles 
+
+```{r}
+(modele1=arima(new_serie,order=c(4,0,4)))
+```
+## Blancheurs des résidus
+```{r}
+par(mfrow=c(1,2))
+acf(modele1$residuals, na.action = na.pass)
+pacf(modele1$residuals,na.action = na.pass)
+```
+## On accepte la blancheur des résidus.
+
+## Prédiction1
+```{r}
+prev1=predict(modele1,n.ahead=5,ci=TRUE)
+vrai=window(res, start=c(2006,3),c(2006,7),frequency=12)
+sqrt(mean((prev1$pred-vrai)^2))            
+            
+```
+
+
+```{r}
+prev1$pred
+```
+```{r}
+vrai
+```
+
+
+```{r}
+confint(modele1)
+```
+
+
+```{r}
+(modele2=arima(new_serie,order=c(3,0,3)))
+```
+```{r}
+par(mfrow=c(1,2))
+acf(modele2$residuals,na.action = na.pass)
+pacf(modele2$residuals,na.action = na.pass)
+```
+```{r}
+confint(modele2)
+```
+#### Prévision2
+```{r}
+prev2=predict(modele2,n.ahead=5,ci=TRUE)
+sqrt(mean((prev2$pred-vrai)^2))
+```
+
+```{r}
+(modele3=arima(new_serie,order=c(2,0,1)))
+```
+
+
+```{r}
+par(mfrow=c(1,2))
+acf(modele3$residuals, na.action=na.pass)
+pacf(modele3$residuals, na.action=na.pass)
+```
+
+```{r}
+confint(modele3)
+```
+```{r}
+prev3=predict(modele3,n.ahead=5,ci=TRUE)
+sqrt(mean((prev3$pred-vrai)^2))
+```
+
+#### Le modèle 2 est préférable car erreur2<err
+
