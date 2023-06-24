@@ -1,0 +1,463 @@
+---
+title: "PROJET FINAL STATISTIQUES POUR LA GÉNÉTIQUE 2019-2020"
+subtitle: "UNIVERSITÉ DE PARIS / MASTER 1 INGÉNIERIE MATHÉMATIQUE ET BIOSTATISTIQUE"
+author: "James Kelson LOUIS"
+date: "4/30/2020"
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+\section{Exercice 1}
+
+#### On se pose le problème d’identifier le modèle sous-jacent à une maladie donnée par analyse de ségrégation. Pour cela on considère le pedigree de la figure dans lequel les individus en gris sont atteints par la maladie. On note $\mathbf{G_{i}}$ le génotype de l’individu i et $\mathbf{P_{i}}$ son phénotype (1 pour malade et 0 pour sain). 
+```{r pressure, echo=FALSE, fig.cap="A caption", out.width = '100%'}
+knitr::include_graphics("pedigree.png")
+```
+
+#### On fait l’hypothèse que la maladie est une maladie génétique due à mutation dans un seul locus d’allèles S,s. On suppose que la fréquence de l’allèle de susceptibilité $S$ est $q$ et que il y a équilibre de Hardy-Weinberg.
+
+#### On commence par considérer un modèle de maladie dominant à pénétrance complète.
+
+#### 1. Écrivons les fonctions de pénétrance $\mathbf{P(\mathit{P}=1|\mathit{G}=g)}$ pour tous les trois génotypes possibles.
+
+##### a) $\mathbf{P(\mathit{P}=1|\mathit{G}=SS)}=1$
+##### b) $\mathbf{P(\mathit{P}=1|\mathit{G}=Ss)}=1$
+##### c) $\mathbf{P(\mathit{P}=1|\mathit{G}=ss)}=0$
+
+#### 2. Trouvons les génotypes possibles pour chaque individu.
+#### Il s'agit d'un modèle de maladie dominant à pénétrance complète, et d'après le pedigree l'individu 1 n'est pas malade et les autres sont malades, forcémment $\mathbf{G_{1}=ss}$.
+#### Pour l'individu 2 on peut considérer deux cas.\newline 
+$\begin{array}{l|cr} G2|G1 & ss &\\ \hline Ss & Ss & ss\\& &\\\hline SS &Ss&\\\end{array}$
+
+#### a) Si $\mathbf{G_{2}=Ss}$, alors $\mathbf{G_{3}=Ss}$ ou  $\mathbf{G_{3}=ss}$, par contre on ne peut pas avoir $\mathbf{G_{3}=ss}$ pour le modèle considéré car l'individu 3 est malade.
+#### b) Si $\mathbf{G_{2}=SS}$ alors $\mathbf{G_{3}=Ss}$.
+#### Au final les génotypes possibles sont: $\mathbf{G_{1}=ss}$, $\mathbf{G_{2}=Ss}$ ou $\mathbf{G_{2}=SS}$ et $\mathbf{G_{3}=Ss}$.
+
+#### 3. Pour tout génotype possible $\mathit{g_{1}}$ pour l'individu 1, calculons $\mathbf{P(\mathit{G_{1}}=\mathit{g_{1}})}$.
+
+#### Pour l'individu 1 $\mathit{g_{1}}=ss$ Sous l'hypothèse Hardy-Weinberg \newline
+$\mathbf{P(\mathit{G_{1}}=ss)}=(1-q)^{2}$.
+
+#### Pour l'individu 2 :
+
+#### Si $\mathit{g_{2}}=Ss$, sous l'hypothèse Hardy-Weinberg \newline
+$\mathbf{P(\mathit{G_{2}}=Ss)}=2\times q\times(1-q)$.
+
+#### Si $\mathit{g_{2}}=SS$, sous l'hypothèse Hardy-Weinberg \newline
+$\mathbf{P(\mathit{G_{2}}=SS)}=q^{2}$.
+
+#### 4. Pour chaque combinaison de génotypes possibles $(\mathit{g_{1}},\mathit{g_{2}},\mathit{g_{3}})$, calculons $\mathbf{P(\mathit{G_{3}}=\mathit{g_{3}}|\mathit{G_{1}}=\mathit{g_{1}},\mathit{G_{2}}=\mathit{g_{2}})}$
+
+$\mathbf{P(\mathit{G_{3}}=Ss|\mathit{G_{1}}=ss,\mathit{G_{2}}=Ss)}=\frac{1}{2}$ \newline
+
+$\mathbf{P(\mathit{G_{3}}=Ss|\mathit{G_{1}}=ss,\mathit{G_{2}}=SS)}=1$.
+
+#### 5. Écrivons la vraissemblance du trio sous ce modèle de maladie, à l'aide des questions précédentes.
+$\mathbf{V_{1}}=\mathbf{P(\mathit{P_{1}}=0|\mathit{P_{2}}=1,\mathit{P_{3}}=1)}$ \newline
+Pour calculer cette probabilité, on utilise la règle de la chaine.\newline
+
+$V=\mathbf{P(\mathit{P_{1}=0})}\times \mathbf{P(\mathit{P_{2}}=1|\mathit{P_{1}}=0)\times \mathbf{P(\mathit{P_{3}}=1|\mathit{P_{1}}=0,\mathit{P_{2}}=1)}}$ \newline
+
+** $\mathbf{P(\mathit{P_{1}=0})}=\mathbf{P(\mathit{P_{1}=0}|\mathit{G}=SS)}\times \mathbf{P(\mathit{G=SS})}+\mathbf{P(\mathit{P_{1}=0}|\mathit{G}=Ss)}\times \mathbf{P(\mathit{G=Ss})}+\mathbf{P(\mathit{P_{1}=0}|\mathit{G}=ss)}\times \mathbf{P(\mathit{G=ss})}$\newline
+
+** $\mathbf{P(\mathit{P_{1}=0})}=0\times 1+0\times 2 q (1-q)+1\times (1-q)^{2}=(1-q)^{2}$ \newline
+
+** $\mathit{P_{2}} \bot \mathit{P_{1}}$ \newline
+ 
+** $\mathbf{P(\mathit{P_{2}}=1|\mathit{P_{1}}=0)}=\mathbf{P(\mathit{P_{2}}=1)}$ \newline
+
+** $\mathbf{P(\mathit{P_{2}=1})}=\mathbf{P(\mathit{P_{2}=1}|\mathit{G}=SS)}\times \mathbf{P(\mathit{G=SS})}+\mathbf{P(\mathit{P_{2}=1}|\mathit{G}=Ss)}\times \mathbf{P(\mathit{G=Ss})}+\mathbf{P(\mathit{P_{2}=1}|\mathit{G}=ss)}\times \mathbf{P(\mathit{G=ss})}$ \newline
+
+** $\mathbf{P(\mathit{P_{2}=1})}=1\times q^{2}+1\times 2q (1-q)+0\times(1-q)^{2}=q^{2}+2q(1-q)=q(2-q)$ \newline
+
+** $\mathbf{P(\mathit{P_{3}=1}|\mathit{P_{1}=0},\mathit{P_{2}=1})}=\mathbf{P(\mathit{P_{3}=1}|\mathit{G_{3}=Ss})}\times \mathbf{P(\mathit{G_{3}=Ss}|\mathit{G_{1}=ss},\mathit{G_{2}=SS})}+\mathbf{P(\mathit{P_{3}=1}|\mathit{G_{3}=Ss})}\times\mathbf{P(\mathit{G_{3}=Ss}|\mathit{G_{1}=ss},\mathit{G_{2}=Ss})}$ \newline
+
+** $\mathbf{P(\mathit{P_{3}=1}|\mathit{P_{1}=0},\mathit{P_{2}=1})}=1\times 1+ 1\times \frac{1}{2}=\frac{3}{2}$ \newline
+
+#### Il vient alors:\newline
+$\mathbf{V_{1}}=(1-q)^{2}\times q(2-q)\times \frac{3}{2}$
+
+#### 6. Calculons la vraissemblance du trio si $q=\frac{1}{2}$
+
+#### Pour $q=\frac{1}{2}$
+
+#### $\mathbf{V_{1}}=\frac{9}{32}$
+#### ou $\boxed{\mathbf{V_{1}}=0.28125}$
+
+#### Pour l'instant on va considérer un modèle de maladie récessif à pénétrance complète.
+
+#### Les fonctions de pénétrances pour ce modèle sont:
+
+##### a) $\mathbf{P(\mathit{P}=1|\mathit{G}=SS)}=1$
+##### b) $\mathbf{P(\mathit{P}=1|\mathit{G}=Ss)}=0$
+##### c) $\mathbf{P(\mathit{P}=1|\mathit{G}=ss)}=0$
+
+#### Trouvons les génotypes possibles pour ce modèle
+
+#### L'individu 1 n'est pas malade, son génotype est soit $\mathbf{G_{1}=ss}$ soit $\mathbf{G_{1}=Ss}$. L'individu 2 est malade, forcément son génotype est $\mathbf{G_{2}=SS}$, pareil pour l'individu 3,  $\mathbf{G_{3}=SS}$.\newline
+
+$\begin{array}{l|cr} G1|G2 & SS & \\ \hline ss & Ss & \\ Ss & SS & Ss\\\hline  &&\\\end{array}$
+
+#### $1^{er}$ cas, si $\mathbf{G_{1}=ss}$ et $\mathbf{G_{2}=SS}$, alors $\mathbf{G_{3}=Ss}$ ce qui est impossible pour le modèle considéré, car l'individu 3 est malade.
+
+#### $2^{ème}$ cas, si $\mathbf{G_{1}=Ss}$ et $\mathbf{G_{2}=SS}$, alors soit $\mathbf{G_{3}=SS}$ soit $\mathbf{G_{3}=Ss}$, le même raisonnement montre que ce dernier cas  $\mathbf{G_{3}=Ss}$ n'est pas possible.
+
+#### Les génotypes possibles sont: $\mathbf{G_{1}=Ss}$, $\mathbf{G_{2}=SS}$ et $\mathbf{G_{3}=SS}$\newline
+
+#### Calculons la vraissemblance de ce trio pour ce modèle.\newline
+
+$\mathbf{V_{2}}=\mathbf{P(\mathit{P_{1}}=0|\mathit{P_{2}}=1,\mathit{P_{3}}=1)}$ \newline
+
+$\mathbf{V_{2}}=\mathbf{P(\mathit{P_{1}=0})}\times \mathbf{P(\mathit{P_{2}}=1|\mathit{P_{1}}=0)\times \mathbf{P(\mathit{P_{3}}=1|\mathit{P_{1}}=0,\mathit{P_{2}}=1)}}$ \newline
+
+** $\mathbf{P(\mathit{P_{1}=0})}=\mathbf{P(\mathit{P_{1}=0}|\mathit{G}=SS)}\times \mathbf{P(\mathit{G=SS})}+\mathbf{P(\mathit{P_{1}=0}|\mathit{G}=Ss)}\times \mathbf{P(\mathit{G=Ss})}+\mathbf{P(\mathit{P_{1}=0}|\mathit{G}=ss)}\times \mathbf{P(\mathit{G=ss})}$\newline
+
+** $\mathbf{P(\mathit{P_{1}=0})}=0\times q^{2}+1\times 2q(1-q)+1\times (1-q)^{2}=1-q^{2}$ \newline
+
+** $\mathbf{P(\mathit{P_{2}=1}|\mathit{P_{1}=0})}=\mathbf{P(\mathit{P_{2}}=1)}$ \newline
+
+** $\mathbf{P(\mathit{P_{2}=1})}=\mathbf{P(\mathit{P_{2}=1}|\mathit{G}=SS)}\times \mathbf{P(\mathit{G=SS})}+\mathbf{P(\mathit{P_{2}=1}|\mathit{G}=Ss)}\times \mathbf{P(\mathit{G=Ss})}+\mathbf{P(\mathit{P_{2}=1}|\mathit{G}=ss)}\times \mathbf{P(\mathit{G=ss})}$ \newline
+
+** $\mathbf{P(\mathit{P_{2}=1})}=1\times q^{2}+0\times2q(1-q)+0\times (1-q)^{2}=q^{2}$ \newline
+
+** $\mathbf{P(\mathit{P_{3}=1}|\mathit{P_{1}=0},\mathit{P_{2}=1})}=\mathbf{P(\mathit{P_{3}=1}|\mathit{G_{3}=SS})}\times \mathbf{P(\mathit{G_{3}=SS}|\mathit{G_{1}=Ss},\mathit{G_{2}=SS})}$ \newline
+
+** $\mathbf{P(\mathit{P_{3}=1}|\mathit{P_{1}=0},\mathit{P_{2}=1})}= 1\times \frac{1}{2}=\frac{1}{2}$ 
+
+#### La vraissemblance s'écrit:
+
+#### $\mathbf{V_{2}}=(1-q^{2})\times q^{2}\times \frac{1}{2}$
+
+#### $\mathbf{V_{2}}=(1-{(\frac{1}{2})}^{2})\times {(\frac{1}{2})}^{2}\times \frac{1}{2}$
+#### Soit $\mathbf{V_{2}}=\frac{3}{32}$
+#### ou $\boxed{\mathbf{V_{2}}=0.09375}$
+#### Enfin, on suppose que la maladie n'a pas de composante génétique. On note $\mathit{F}$ la fréquence de la maladie dans la population.
+
+#### 8. Écrivons la vraissemblance du trio observé sous cette nouvelle hypothèse.\newline
+
+$\mathbf{V_{3}}=(1-F)\times {F}^{2}$
+
+#### 9. Calculons la vraissemblance du trio sous cette nouvelle hypothèse, si $\mathit{F}=\frac{1}{20}$.\newline 
+
+$\mathbf{V_{3}}=(1-\frac{1}{20}) \times {(\frac{1}{20})}^{2}$ \newline
+
+$\mathbf{V_{3}}=\frac{19}{20} \times {(\frac{1}{400})}$ \newline
+
+$\mathbf{V_{3}}=\frac{19}{8000}$ \newline
+
+$\boxed {\mathbf{V_{3}}=0.002375}$
+
+#### 10. Au vu du trio observé, nous avons $\mathbf{V_{3}}<\mathbf{V_{2}}<\mathbf{V_{1}}$, donc le modèle de maladie le plus probable est le modèle 1.
+
+\section{Exercice 2}
+\subsection{Explorations préliminaires-covariables}
+\subsubsection{1 Charegement du fichier des données} 
+```{r}
+hgdp<- read.delim("C:/Users/james/OneDrive/Desktop/DocParisDescartes/S2/StatGen2/HGDP_AKT1.txt", header=1)
+```
+```{r,message=FALSE,warning=FALSE}
+attach(hgdp)
+```
+
+\subsubsection{2a  Trouvons le nombre d'observations (individus)}
+```{r}
+nrow(hgdp)
+```
+
+\subsubsection{2b Trouvons le nombre de SNPs disponibles, sachant que les SNPs dans le gène AKT1 sont dénotés avec le préfixe AKT1}
+```{r}
+SNP_AKT1 <- names(hgdp)[startsWith(names(hgdp),"AKT1")]
+length(SNP_AKT1)
+```
+\subsubsection{3a Le nombre de femmes et d'hommes dans l'étude est:}
+```{r}
+table(Gender)
+```
+#### Soit 380 Femmes et 684 Hommes.
+\subsubsection{3b Le nombre de populations dans l'étude est:}
+```{r}
+length(levels(Population))
+```
+\subsubsection{3b Le nombre de zones géographiques regroupant plusieurs pays on a des données est: }
+```{r}
+length(unique(Geographic.area))
+length(summary(Geographic.area))
+```
+\subsubsection{4a Les Populations les plus représentées sont:}
+```{r}
+Plus <- rev(tail(as.factor(sort(summary(Population))),4))
+Plus1 <- as.numeric(rev(levels(Plus)))[1:4]
+names(Plus1) <- attributes(Plus)$names
+Plus1
+```
+\subsubsection{4b Les Populations les moins représentées sont:}
+```{r}
+Moins <- (head(as.factor(sort(summary(Population))),4))
+Moins1 <- as.numeric(levels(Moins))[1:4]
+names(Moins1) <- attributes(Moins)$names
+Moins1
+```
+\subsubsection{4c Les zones géographiques les plus représentées sont:}
+```{r}
+plus <- rev(tail(as.factor(sort(summary(Geographic.area))),4))
+plus1 <- as.numeric(rev(levels(plus)))[1:4]
+names(plus1) <- attributes(plus)$names
+plus1
+```
+\subsubsection{4d Les zones géographiques les moins représentées sont:}
+```{r}
+moins <- (head(as.factor(sort(summary(Geographic.area))),4))
+moins1 <- as.numeric(levels(moins))[1:4]
+names(moins1) <- attributes(moins)$names
+moins1
+```
+\subsubsection{4e Représentons graphiquement ces deux variables à l'aide d'un diagramme en batons}
+```{r}
+barplot(sort(table(Population)),horiz=TRUE,las=2,cex.names=0.5, col = Population,main=" Population")
+```
+
+```{r}
+barplot(sort(table(Geographic.area)),horiz=TRUE,las=2,cex.names=0.5, col = Geographic.area, main="Zones géographiques")
+```
+\section{Exercice 3}
+\subsection{Explorations préliminaires-génotypes}
+\subsubsection{1 Estimons les fréquences alléliques et génotypiques du SNP AKT1.C6024T, on suppose que les fréquences génotypiques ne changent pas en considérant uniquement les génotypes observés. Car, si un génotype est plus difficile à observer par voie expérimentale que les autres, sous cette hypothèse on sous-estime sa fréquence réelle.}
+
+```{r,include=FALSE}
+library(genetics)
+```
+```{r}
+geno1 <- genotype(AKT1.C6024T, sep="")
+```
+```{r}
+summary(geno1)
+```
+\subsubsection{Affichons les proportions des génotypes de AKT1.C6024T pour chaque zone géographique à l'aide d'un mosaicplot}
+
+```{r}
+(gen <- table(Geographic.area, AKT1.C6024T))
+```
+#### Proportions
+```{r}
+(prop_gen <- prop.table(gen,1)*100)
+```
+
+
+
+
+```{r}
+library("graphics")
+mosaicplot(prop_gen, shade = TRUE, las=2,
+           main = "Proportion des génotypes par zone géographique")
+```
+
+#### Au vu du mosaicplot on a envie de conclure que la proportion des génotypes CC est toujours supérieure par rapport à la proportion des génotypes CT qui ont une proportion supérieure aux génotypes TT.
+
+\subsubsection{Faisons un test pour vérifier la réponse précédente}
+```{r}
+chisq.test(prop_gen)
+```
+#### Au vu de la p-valeur, on peut conclure que les proportions des génotypes par zones géographiques sont statistiquement liées. 
+
+\subsubsection{Calculons la mesure D' de déséquilibre de liaison(LD) pour toute paire de SNPs dans le gène AKT1}
+```{r}
+snp_names <- names(hgdp)[substr(names(hgdp),start=1,stop=5)=='AKT1.']
+snps <- hgdp[snp_names]
+for (i in 1:length(snp_names)) snps[,i]<-genotype(snps[,i],sep='')
+LD(snps)$"D'"
+```
+#### Au vu des résultats, on constate que la mesure D' de déséquilibre de liaison entre les paires de SNPs dans le gène AKT1 est toujours très proche de 1, on conclut qu'il y a un fort déséquilibre de liaison entre eux.
+
+\section{3e partie: Etude Fuctional Single Nucleotide Polymorphisms Associated with Human Muscle Size and Strength (FAMuSS)}
+\subsection{Exercice 4 (HWE)}
+\subsubsection{On s'interese à la variable NDRM.CH, le changement en pourcentage de la force de la force du bras non dominant avant et après le programme d'entrainnement physique prévu dans l'étude. On se demande si NDRM.CH est associée à un ou plusieurs SNPs.}
+\subsubsection{1a Chargement des données }
+```{r}
+ fms <- read.delim("C:/Users/james/OneDrive/Desktop/DocParisDescartes/S2/StatGen2/FMS_data.txt", header=1,fill = 1)
+```
+\subsubsection{1b On exclut le seul individu d'origine amérindienne car cette observation crée des problèmes quand on essaie d'automatiser l'analyse sur les strates.}
+```{r}
+table(fms$Race)
+```
+```{r}
+which(fms$Race=="Am Indian")
+```
+
+```{r}
+fms <- fms[-1107,]
+```
+```{r}
+table(fms$Race)
+```
+#### Testons si le SNP akt1_t10726c_t12868c est en HWE dans l’ensemble de la population
+```{r}
+geno2 <- genotype(fms$akt1_t10726c_t12868c,sep='')
+summary(fms$akt1_t10726c_t12868c)
+```
+```{r}
+n=sum(table(geno2))
+GenoCount <- table(geno2)
+(GenoFreq <- GenoCount/n)
+FreqC <- setNames(GenoFreq[1]+0.5*GenoFreq[2],c("C")); FreqC
+FreqT <- setNames(GenoFreq[3]+0.5*GenoFreq[2],c("T")); FreqT
+```
+### Sous l'hypothèse Hardy-Weinberg
+```{r}
+FreqCC = setNames(FreqC^2,'CC'); FreqCC
+FreqTC = setNames(2*FreqT*FreqC,'TC'); FreqTC
+FreqTT = setNames(FreqT^2,'TT'); FreqTT
+```
+```{r}
+(ExpCount <- c(FreqCC,FreqTC,FreqTT)*n)
+```
+### La statistique de test est:
+```{r}
+ChisqStat <- sum((GenoCount-ExpCount)^2/ExpCount); ChisqStat
+```
+```{r}
+pchisq(ChisqStat,df=1,lower.tail = F)
+```
+### Donc on rejette H0, il n'est pas en HWE dans l'ensemble de la population.
+
+### 3 Testons si le SNP akt1_t10726c_t12868c est en HWE dans chaque strate de la variable Race}
+
+```{r}
+A <- levels(fms$Race)
+HWEGeoArea <- tapply(geno2,INDEX=fms$Race,HWE.chisq)  
+for (i in A) { print(HWEGeoArea[i])
+  }
+```
+## On conclut que le SNP akt1_t10726c_t12868c est en HWE dans chaque strate de la variable Race.
+
+\subsection{Exercice 5 (Association, tests multiples)}
+\subsubsection{On s'interese à la variable NDRM.CH, le changement en pourcentage de la force de la force du bras non dominant avant et après le programme d'entrainnement physique prévu dans l'étude. On se demande si NDRM.CH est associée à un ou plusieurs SNPs.}
+\subsubsection{Contruisons la variable aléatoire Y qui vaut 1 si NDRM.CH>60 et 0 autrement}
+
+```{r}
+Y <- as.numeric(fms$NDRM.CH>60)
+```
+#### Testons l'association entre tous les SNPs et Y
+
+#### Pour cela, on va récupérer les SNPs dans le jeu de données.
+```{r}
+W=c("A","C","G","T")
+A <- (expand.grid(x=W,y=W, stringsAsFactors=T))
+(W=paste(A$x,A$y, sep=""))
+```
+
+```{r}
+vect <- c()
+for (i in 1:ncol(fms)) {
+R <-lapply(list(W),match, fms[,i])[[1]] 
+if (sum(R,na.rm = TRUE)==0){vect[i]=FALSE}
+else{vect[i]= TRUE}
+}
+```
+#### Nombre de SNPs
+```{r}
+ind=which(vect==TRUE)
+length(ind)
+```
+```{r}
+names(fms[,ind])[1:10]
+```
+```{r}
+snps <- fms[,vect]
+dim(snps)
+length(Y)
+which(names(fms)=='NDRM.CH')
+```
+#### On calcule les p-valeurs
+```{r}
+pval = suppressWarnings(apply(snps, 2, function(x) chisq.test(table(x,Y))$p.value))
+hist(pval, main="Histogramme des p-valeurs")
+```
+### Affichons le manhattan plot montrant l'intensité d'association de chaque SNP avec Y
+
+```{r}
+barplot(-log10(pval),col="purple", main="Intensité d'association des SNPs avec Y")
+```
+
+```{r}
+datasnp=data.frame(SNP=colnames(snps),CHR=rep(1,ncol(snps)),BP=1:ncol(snps),P=pval,row.names = 1:ncol(snps))
+```
+
+### Pour que la probabilité de faire au moins un faux positif sur la totalité des tests soit inférieure à 0.05 il faut faire chaque test au seuil de:
+
+```{r}
+alpha=0.05
+(seuil=alpha/length(snps))
+```
+
+### Affichons une barre horizontale à ce niveau sur le Manhattan plot
+```{r}
+barplot(-log10(pval), col="purple",main="Intensité d'association des SNPs avec Y")
+abline(h =-log10(seuil), col = "green")
+```
+### Correction avec tests multiples
+```{r}
+Bonfpv = p.adjust(pval,method="bonferroni")
+sum(Bonfpv<=0.05,na.rm = T)
+```
+### Après correction pour les tests multiples,le seul SNP qui semble avoir une association significative avec Y est 
+```{r}
+which(Bonfpv<=0.05)
+```
+### Faisons un test pour voir si on peut conclure sur l'association entre Y et ce SNP
+```{r}
+chisq.test(table(fms$rs849409,Y))
+```
+### Au vu de la p-valeur, on peut conclure qu'il y a une association significative entre ce SNP et Y.
+
+\section{4e Partie: Autres données}
+#### Chargement du jeu de données
+```{r}
+exo5 <- read.table("C:/Users/james/OneDrive/Desktop/DocParisDescartes/S2/StatGen2/exo5.txt", quote="\"", comment.char="")
+```
+#### Description
+##### M: Phénotype, 1 pour les cas et 0 pour les témoins 
+##### E: Covariable d'exposition environnementale, 1 pour les exposés, 0 pour les non exposés.
+##### SNP1-SNP100: génotype 0,1,2 pour 100 SNPs bialléliques, la valeur du génotype indique le nombre d'allèles rares.
+
+### Testons l'association entre tous les SNPs et M
+```{r}
+pval1 = suppressWarnings(apply(exo5[,-c(1,2)], 2, function(x) chisq.test(table(x,exo5$M))$p.value))
+hist(pval1)
+```
+```{r}
+seuil2=alpha/(ncol(exo5)-2)
+barplot(-log10(pval1),col="purple",main="Intensité d'association des SNPs avec M")
+abline(h = -log10(seuil2), col = "green")
+```
+
+```{r}
+sum(pval1<=0.05)
+```
+### Correction avec tests multiples
+```{r}
+Bonfpv1 = p.adjust(pval1,method="bonferroni")
+sum(Bonfpv1<=0.05,na.rm = T)
+```
+### Les SNPs associés à la maladie sont:
+```{r}
+which(Bonfpv1<=0.05)
+```
+### 3. Considérons le SNP 42, celui pour lequel le signal d'association est plus forte (c'est à dire pour lequel le test d'association a donné la plus petite p-valeur). Écrivons l'équation du modèle de régression logistique de M sur X
+```{r}
+model<-glm(exo5$M~exo5$SNP42, family=binomial(link='logit'),na.action=na.exclude); summary(model)
+```
+#### Les coefficients sont significatifs, de plus, $\hat{\beta_{1}}>0$, une augmentation du nombre d'allèles rare de 1 augmente les chances pour que le phénotype M soit égal à 1 de $\exp(0.53265)$
+
+
+#### 4. On suspecte que l'effet de X sur M dépend de l'exposition E. Proposons un modèle pour vérifier cette hypothèse.
+```{r}
+new_model <- lm(exo5$M ~ exo5$SNP42 + exo5$E, na.action=na.exclude); summary(new_model)
+
+```
+#### Au vu des résultats,la variable E est significative, on conclut que l'effet de X sur M  dépend de E.
+
